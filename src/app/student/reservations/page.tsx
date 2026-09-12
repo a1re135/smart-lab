@@ -2,10 +2,22 @@ import Link from "next/link";
 import CancelReservationButton from "@/components/cancel-reservation-button";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
+import { processExpiredReservationsForStudent } from "@/lib/violations";
 import CheckInForm from "@/components/checkin-form";
 
 export default async function ReservationsPage() {
   const session = await requireRole("STUDENT");
+
+  await processExpiredReservationsForStudent(
+    session.userId
+  );
+
+  const violationCount =
+  await prisma.violation.count({
+    where: {
+      userId: session.userId,
+    },
+  });
 
   const reservations =
     await prisma.reservation.findMany({
@@ -39,6 +51,20 @@ export default async function ReservationsPage() {
         >
           ← 返回实验室列表
         </Link>
+
+        {violationCount > 0 && (
+          <div className="mb-5 rounded-xl border border-orange-200 bg-orange-50 p-4">
+            <p className="font-medium text-orange-800">
+              当前违规次数：{violationCount}
+            </p>
+
+            {violationCount >= 3 && (
+              <p className="mt-1 text-sm text-orange-700">
+                由于违规次数达到3次，您目前只能提前1天预约实验室。
+              </p>
+            )}
+          </div>
+        )}
 
         {reservations.length === 0 ? (
           <div className="rounded-xl bg-white p-8 text-center shadow-sm">

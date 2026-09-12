@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-
+import { processExpiredReservationsForStudent } from "@/lib/violations";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
@@ -13,6 +13,17 @@ export async function POST(request: Request) {
         { status: 401 }
       );
     }
+
+    await processExpiredReservationsForStudent(
+      session.userId
+    );
+
+    const violationCount =
+      await prisma.violation.count({
+        where: {
+          userId: session.userId,
+        },
+      });
 
     const body = await request.json();
 
@@ -106,16 +117,33 @@ export async function POST(request: Request) {
     // Advance booking rule
     // -----------------------------------------
 
+    const allowedAdvanceDays =
+      violationCount >= 3
+        ? Math.min(laboratory.advanceDays, 1)
+        : laboratory.advanceDays;
+
     const maxDate = new Date();
+
     maxDate.setDate(
-      maxDate.getDate() + laboratory.advanceDays
+      maxDate.getDate() + allowedAdvanceDays
     );
+
     maxDate.setHours(23, 59, 59, 999);
 
     if (startAt > maxDate) {
+      if (violationCount >= 3) {
+        return NextResponse.json(
+          {
+            error:
+              "您的违规次数已达到3次，目前只能提前1天预约",
+          },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
         {
-          error: `该实验室最多只能提前 ${laboratory.advanceDays} 天预约`,
+          error: `该实验室最多只能提前 ${allowedAdvanceDays} 天预约`,
         },
         { status: 400 }
       );
