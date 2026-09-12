@@ -7,10 +7,20 @@ import { requireRole } from "@/lib/session";
 export default async function TeacherPage() {
   const session = await requireRole("TEACHER");
 
+  const now = new Date();
+
+  const usageStart = new Date(now);
+  usageStart.setDate(
+    usageStart.getDate() - 29
+  );
+  usageStart.setHours(0, 0, 0, 0);
+
   const [
     students,
     pendingReservations,
     recentReservations,
+    laboratories,
+    labUsageReservations,
   ] = await Promise.all([
     prisma.user.findMany({
       where: {
@@ -80,6 +90,39 @@ export default async function TeacherPage() {
 
       take: 8,
     }),
+    
+    prisma.laboratory.findMany({
+      where: {
+        isActive: true,
+      },
+
+      orderBy: {
+        id: "asc",
+      },
+    }),
+
+    prisma.reservation.findMany({
+      where: {
+        status: {
+          in: [
+            "APPROVED",
+            "COMPLETED",
+          ],
+        },
+
+        startAt: {
+          gte: usageStart,
+          lte: now,
+        },
+      },
+
+      select: {
+        laboratoryId: true,
+        startAt: true,
+        endAt: true,
+        peopleCount: true,
+      },
+    }),
   ]);
 
   const approvedCount =
@@ -91,6 +134,89 @@ export default async function TeacherPage() {
 
   const pendingCount =
     pendingReservations.length;
+  
+  const laboratoryUsage =
+    laboratories
+      .map((laboratory) => {
+        const dailyOpenHours =
+          Math.max(
+            0,
+            timeToHours(
+              laboratory.closeTime
+            ) -
+              timeToHours(
+                laboratory.openTime
+              )
+          );
+
+        const maximumPersonHours =
+          dailyOpenHours *
+          laboratory.maxPeople *
+          30;
+
+        const reservationsForLab =
+          labUsageReservations.filter(
+            (reservation) =>
+              reservation.laboratoryId ===
+              laboratory.id
+          );
+
+        const usedPersonHours =
+          reservationsForLab.reduce(
+            (total, reservation) => {
+              const duration =
+                Math.max(
+                  0,
+                  (Math.min(
+                    reservation.endAt.getTime(),
+                    now.getTime()
+                  ) -
+                    Math.max(
+                      reservation.startAt.getTime(),
+                      usageStart.getTime()
+                    )) /
+                    (1000 * 60 * 60)
+                );
+
+              return (
+                total +
+                duration *
+                  reservation.peopleCount
+              );
+            },
+            0
+          );
+
+        const utilization =
+          maximumPersonHours > 0
+            ? Math.min(
+                100,
+                (usedPersonHours /
+                  maximumPersonHours) *
+                  100
+              )
+            : 0;
+
+        return {
+          id: laboratory.id,
+          name: laboratory.name,
+          openTime:
+            laboratory.openTime,
+          closeTime:
+            laboratory.closeTime,
+          maxPeople:
+            laboratory.maxPeople,
+          reservationCount:
+            reservationsForLab.length,
+          usedPersonHours,
+          utilization,
+        };
+      })
+      .sort(
+        (a, b) =>
+          b.utilization -
+          a.utilization
+      );
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -310,6 +436,124 @@ export default async function TeacherPage() {
                                   reservation.id
                                 }
                               />
+                            </div>
+                          </div>
+                        </article>
+                      )
+                    )}
+                  </div>
+                )}
+              </section>
+              
+              {/* Laboratory usage */}
+              <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+                <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-sm font-bold text-blue-700">
+                          率
+                        </div>
+
+                        <div>
+                          <h2 className="text-xl font-bold text-slate-900">
+                            实验室使用情况
+                          </h2>
+
+                          <p className="mt-1 text-sm text-slate-500">
+                            查看近30天各实验室的使用情况
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+                      近30天
+                    </span>
+                  </div>
+                </div>
+
+                {laboratoryUsage.length === 0 ? (
+                  <EmptyState
+                    title="暂无实验室数据"
+                    description="实验室使用情况会显示在这里。"
+                  />
+                ) : (
+                  <div className="grid gap-4 p-5 sm:p-6 lg:grid-cols-2">
+                    {laboratoryUsage.map(
+                      (laboratory, index) => (
+                        <article
+                          key={laboratory.id}
+                          className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-xs font-bold text-slate-500 shadow-sm">
+                                  {index + 1}
+                                </span>
+
+                                <h3 className="truncate font-bold text-slate-900">
+                                  {laboratory.name}
+                                </h3>
+                              </div>
+
+                              <p className="mt-2 text-xs text-slate-400">
+                                {laboratory.openTime}
+                                {" - "}
+                                {laboratory.closeTime}
+                                {" · "}
+                                {laboratory.maxPeople} 人容量
+                              </p>
+                            </div>
+
+                            <div className="shrink-0 text-right">
+                              <p className="text-2xl font-bold text-blue-700">
+                                {laboratory.utilization.toFixed(
+                                  1
+                                )}
+                                %
+                              </p>
+
+                              <p className="text-xs text-slate-400">
+                                使用率
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-5">
+                            <UsageProgress
+                              value={
+                                laboratory.utilization
+                              }
+                            />
+                          </div>
+
+                          <div className="mt-4 grid grid-cols-2 gap-3">
+                            <div className="rounded-xl bg-white px-3 py-3 ring-1 ring-slate-100">
+                              <p className="text-xs text-slate-400">
+                                有效预约
+                              </p>
+
+                              <p className="mt-1 text-sm font-bold text-slate-700">
+                                {
+                                  laboratory.reservationCount
+                                }{" "}
+                                次
+                              </p>
+                            </div>
+
+                            <div className="rounded-xl bg-white px-3 py-3 ring-1 ring-slate-100">
+                              <p className="text-xs text-slate-400">
+                                容量使用
+                              </p>
+
+                              <p className="mt-1 text-sm font-bold text-slate-700">
+                                {laboratory.usedPersonHours.toFixed(
+                                  1
+                                )}{" "}
+                                人·小时
+                              </p>
                             </div>
                           </div>
                         </article>
@@ -541,6 +785,29 @@ function InfoBox({
   );
 }
 
+function UsageProgress({
+  value,
+}: {
+  value: number;
+}) {
+  const percentage =
+    Math.min(
+      100,
+      Math.max(0, value)
+    );
+
+  return (
+    <div className="h-2.5 overflow-hidden rounded-full bg-slate-200">
+      <div
+        className="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all"
+        style={{
+          width: `${percentage}%`,
+        }}
+      />
+    </div>
+  );
+}
+
 function StatusBadge({
   status,
 }: {
@@ -702,4 +969,16 @@ function formatDateTime(
       hour12: false,
     }
   ).format(date);
+}
+
+function timeToHours(
+  time: string
+) {
+  const [hours, minutes] =
+    time.split(":").map(Number);
+
+  return (
+    hours +
+    (minutes || 0) / 60
+  );
 }
