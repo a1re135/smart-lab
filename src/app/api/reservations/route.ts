@@ -355,11 +355,40 @@ export async function POST(request: Request) {
     }
 
     // ==========================================
-    // OVERLAP / CAPACITY
+// LABORATORY CAPACITY
+// ==========================================
+
+// A single reservation itself cannot exceed
+// the laboratory's maximum capacity.
+if (
+  peopleCount >
+  laboratory.maxPeople
+) {
+  return NextResponse.json(
+    {
+      error: `该实验室最多容纳 ${laboratory.maxPeople} 人`,
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+    // ==========================================
+    // LABORATORY TIME CONFLICT
     // ==========================================
 
-    const overlappingReservations =
-      await prisma.reservation.findMany({
+    // Any active reservation in the same laboratory
+    // that overlaps the requested period blocks
+    // the new reservation.
+    //
+    // Overlap rule:
+    // existing.startAt < requested.endAt
+    // AND
+    // existing.endAt > requested.startAt
+
+    const laboratoryConflict =
+      await prisma.reservation.findFirst({
         where: {
           laboratoryId,
 
@@ -381,36 +410,17 @@ export async function POST(request: Request) {
         },
 
         select: {
-          peopleCount: true,
+          id: true,
+          startAt: true,
+          endAt: true,
         },
       });
 
-    const alreadyReservedPeople =
-      overlappingReservations.reduce(
-        (total, reservation) =>
-          total +
-          reservation.peopleCount,
-        0
-      );
-
-    const totalPeople =
-      alreadyReservedPeople +
-      peopleCount;
-
-    if (
-      totalPeople >
-      laboratory.maxPeople
-    ) {
-      const remaining =
-        laboratory.maxPeople -
-        alreadyReservedPeople;
-
+    if (laboratoryConflict) {
       return NextResponse.json(
         {
           error:
-            remaining > 0
-              ? `当前时间段最多还能预约 ${remaining} 人`
-              : "当前时间段人数已满",
+            "该实验室在所选时间段已有预约，请选择其他时间",
         },
         {
           status: 400,
