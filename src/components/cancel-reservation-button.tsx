@@ -19,8 +19,20 @@ export default function CancelReservationButton({
   const [error, setError] =
     useState("");
   
-  const [showSuccess, setShowSuccess] =
-    useState(false);
+  const [popup, setPopup] =
+    useState<{
+      open: boolean;
+      title: string;
+      message: string;
+      variant:
+        | "success"
+        | "warning";
+    }>({
+      open: false,
+      title: "",
+      message: "",
+      variant: "success",
+    });
 
   async function handleCancel() {
     const confirmed =
@@ -71,11 +83,28 @@ export default function CancelReservationButton({
         return;
       }
 
-      setShowSuccess(true);
+      if (
+        data.frequentCancellationViolationCreated
+      ) {
+        setPopup({
+          open: true,
+          title: "已记录频繁取消违规",
+          message: `您近30天已取消 ${data.recentCancellationCount} 次预约，本次已记录1次违规。`,
+          variant: "warning",
+        });
+      } else {
+        setPopup({
+          open: true,
+          title: "预约已取消",
+          message:
+            "您的预约已成功取消。",
+          variant: "success",
+        });
+      }
 
       setTimeout(() => {
         router.refresh();
-      }, 1000);
+      }, 1400);
     } catch (error) {
       console.error(
         "Cancel reservation request failed:",
@@ -110,9 +139,10 @@ export default function CancelReservationButton({
       </div>
 
       <ActionPopup
-        open={showSuccess}
-        title="预约已取消"
-        message="您的预约已成功取消。"
+        open={popup.open}
+        title={popup.title}
+        message={popup.message}
+        variant={popup.variant}
       />
     </>
   );
