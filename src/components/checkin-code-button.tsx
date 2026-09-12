@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-
 import QRCode from "qrcode";
 
 type Props = {
@@ -26,6 +25,9 @@ export default function CheckInCodeButton({
   const [copied, setCopied] =
     useState(false);
 
+  const [linkCopied, setLinkCopied] =
+    useState(false);
+
   const [error, setError] =
     useState("");
 
@@ -48,8 +50,7 @@ export default function CheckInCodeButton({
       let data;
 
       try {
-        data =
-          JSON.parse(raw);
+        data = JSON.parse(raw);
       } catch {
         console.error(
           "Check-in API returned:",
@@ -73,17 +74,15 @@ export default function CheckInCodeButton({
       }
 
       const link =
-        `${window.location.origin}` +
-        `/student/checkin/qr?token=` +
-        encodeURIComponent(
+        `${window.location.origin}/student/checkin/qr?token=${encodeURIComponent(
           data.qrToken
-        );
+        )}`;
 
       const generatedQr =
         await QRCode.toDataURL(
           link,
           {
-            width: 260,
+            width: 320,
             margin: 2,
           }
         );
@@ -139,6 +138,12 @@ export default function CheckInCodeButton({
       await navigator.clipboard.writeText(
         qrLink
       );
+
+      setLinkCopied(true);
+
+      setTimeout(() => {
+        setLinkCopied(false);
+      }, 1500);
     } catch (error) {
       console.error(
         "Copy QR link failed:",
@@ -175,21 +180,30 @@ export default function CheckInCodeButton({
           </div>
 
           <div className="p-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              {/* Code */}
+            <div className="grid gap-4 lg:grid-cols-2">
+              {/* Verification code */}
               <div className="rounded-2xl bg-white p-4 text-center ring-1 ring-blue-100">
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
                   验证码签到
                 </p>
 
-                <p className="mt-5 text-3xl font-black tracking-[0.3em] text-blue-700">
-                  {code}
-                </p>
+                <div className="mt-4 flex min-h-[220px] items-center justify-center rounded-2xl bg-slate-50 px-4 py-6">
+                  <div className="flex w-full items-center justify-evenly">
+                    {code.split("").map((digit, index) => (
+                      <span
+                        key={`${digit}-${index}`}
+                        className="text-[18px] font-black leading-none text-blue-700 sm:text-2xl"
+                      >
+                        {digit}
+                      </span>
+                    ))}
+                  </div>
+                </div>
 
                 <button
                   type="button"
                   onClick={copyCode}
-                  className="mt-5 w-full rounded-xl bg-blue-50 px-4 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
+                  className="mt-4 w-full rounded-xl bg-blue-50 px-4 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
                 >
                   {copied
                     ? "✓ 已复制"
@@ -197,26 +211,30 @@ export default function CheckInCodeButton({
                 </button>
               </div>
 
-              {/* QR */}
+              {/* QR code */}
               <div className="rounded-2xl bg-white p-4 text-center ring-1 ring-blue-100">
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
                   二维码签到
                 </p>
 
-                {qrDataUrl && (
-                  <img
-                    src={qrDataUrl}
-                    alt="学生签到二维码"
-                    className="mx-auto mt-3 h-52 w-52 rounded-xl"
-                  />
-                )}
+                <div className="mt-4 flex min-h-[220px] items-center justify-center rounded-2xl bg-slate-50 px-4 py-4">
+                  {qrDataUrl && (
+                    <img
+                      src={qrDataUrl}
+                      alt="学生签到二维码"
+                      className="h-auto w-full max-w-[220px] object-contain"
+                    />
+                  )}
+                </div>
 
                 <button
                   type="button"
                   onClick={copyQrLink}
-                  className="mt-3 w-full rounded-xl bg-slate-50 px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-100"
+                  className="mt-4 w-full rounded-xl bg-slate-50 px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-100"
                 >
-                  复制二维码链接
+                  {linkCopied
+                    ? "✓ 已复制"
+                    : "复制二维码链接"}
                 </button>
               </div>
             </div>
