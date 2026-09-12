@@ -2,6 +2,7 @@ import AdminApprovalButtons from "@/components/admin-approval-buttons";
 import LogoutButton from "@/components/logout-button";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
+import CheckInCodeButton from "@/components/checkin-code-button";
 
 export default async function AdminPage() {
   const session = await requireRole("ADMIN");
@@ -22,6 +23,23 @@ export default async function AdminPage() {
         createdAt: "desc",
       },
     });
+
+    const approvedReservations =
+      await prisma.reservation.findMany({
+        where: {
+          status: "APPROVED",
+        },
+
+        include: {
+          student: true,
+          laboratory: true,
+          checkIn: true,
+        },
+
+        orderBy: {
+          startAt: "asc",
+        },
+      });
 
   return (
     <main className="min-h-screen bg-slate-100">
@@ -46,6 +64,73 @@ export default async function AdminPage() {
             待确认预约
           </h2>
 
+          <div className="mt-10">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-slate-900">
+              已通过预约
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              管理签到验证码
+            </p>
+          </div>
+
+          {approvedReservations.length === 0 ? (
+            <div className="rounded-xl bg-white p-8 text-center shadow-sm">
+              <p className="text-slate-500">
+                暂无已通过预约
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {approvedReservations.map(
+                (reservation) => (
+                  <div
+                    key={reservation.id}
+                    className="rounded-xl bg-white p-5 shadow-sm"
+                  >
+                    <h3 className="text-lg font-bold text-slate-900">
+                      {reservation.laboratory.name}
+                    </h3>
+
+                    <div className="mt-3 space-y-1 text-sm text-slate-600">
+                      <p>
+                        学生：{reservation.student.name}
+                      </p>
+
+                      <p>
+                        学号：
+                        {reservation.student.studentNumber ??
+                          "-"}
+                      </p>
+
+                      <p>
+                        时间：
+                        {formatDateTime(
+                          reservation.startAt
+                        )}
+                        {" - "}
+                        {formatTime(
+                          reservation.endAt
+                        )}
+                      </p>
+                    </div>
+
+                    {reservation.checkIn?.checkedInAt ? (
+                      <div className="mt-4 rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+                        已签到
+                      </div>
+                    ) : (
+                      <CheckInCodeButton
+                        reservationId={reservation.id}
+                      />
+                    )}
+                  </div>
+                )
+              )}
+            </div>
+          )}
+        </div>
           <p className="mt-1 text-sm text-slate-500">
             确认需要管理员审批的实验室预约
           </p>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import CancelReservationButton from "@/components/cancel-reservation-button";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
+import CheckInForm from "@/components/checkin-form";
 
 export default async function ReservationsPage() {
   const session = await requireRole("STUDENT");
@@ -14,8 +15,8 @@ export default async function ReservationsPage() {
 
       include: {
         laboratory: true,
+        checkIn: true,
       },
-
       orderBy: {
         createdAt: "desc",
       },
@@ -101,6 +102,19 @@ export default async function ReservationsPage() {
                         <CancelReservationButton
                         reservationId={reservation.id}
                         />
+                    )}
+
+                    {reservation.status === "APPROVED" &&
+                      !reservation.checkIn?.checkedInAt && (
+                        <CheckInForm
+                          reservationId={reservation.id}
+                        />
+                      )}
+
+                    {reservation.checkIn?.checkedInAt && (
+                      <div className="mt-4 rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+                        ✓ 已签到
+                      </div>
                     )}
                   </div>
                 </div>
