@@ -58,7 +58,7 @@ export default async function AdminPage() {
         <LogoutButton />
       </header>
 
-      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <Link
         href="/admin/laboratories"
         className="rounded-xl bg-white p-5 shadow-sm transition hover:shadow-md"
@@ -95,6 +95,19 @@ export default async function AdminPage() {
 
         <h2 className="mt-1 text-lg font-bold text-slate-900">
           用户管理
+        </h2>
+      </Link>
+
+      <Link
+        href="/admin/statistics"
+        className="rounded-xl bg-white p-5 shadow-sm transition hover:shadow-md"
+      >
+        <p className="text-sm text-slate-500">
+          查看
+        </p>
+
+        <h2 className="mt-1 text-lg font-bold text-slate-900">
+          数据统计
         </h2>
       </Link>
     </div>

@@ -29,6 +29,18 @@ export default async function ReservePage({
       where: {
         id: laboratoryId,
       },
+
+      include: {
+        equipment: {
+          where: {
+            status: "AVAILABLE",
+          },
+
+          orderBy: {
+            id: "asc",
+          },
+        },
+      },
     });
 
   if (!laboratory || !laboratory.isActive) {
@@ -48,15 +60,20 @@ export default async function ReservePage({
         <div className="rounded-2xl bg-white p-5 shadow-sm sm:p-8">
           <ReservationForm
             laboratoryId={laboratory.id}
-            laboratoryName={
-              laboratory.name
-            }
+            laboratoryName={laboratory.name}
             openTime={laboratory.openTime}
             closeTime={laboratory.closeTime}
             maxPeople={laboratory.maxPeople}
-            advanceDays={
-              laboratory.advanceDays
-            }
+            advanceDays={laboratory.advanceDays}
+            equipment={laboratory.equipment.map((item) => ({
+              id: item.id,
+              name: item.name,
+              requirements: item.requirements,
+              requiresTeacherApproval:
+                item.requiresTeacherApproval,
+              minimumStudentLevel:
+                item.minimumStudentLevel,
+            }))}
           />
         </div>
       </div>

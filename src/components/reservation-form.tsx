@@ -3,6 +3,14 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
+type EquipmentOption = {
+  id: number;
+  name: string;
+  requirements: string | null;
+  requiresTeacherApproval: boolean;
+  minimumStudentLevel: string | null;
+};
+
 type ReservationFormProps = {
   laboratoryId: number;
   laboratoryName: string;
@@ -10,6 +18,7 @@ type ReservationFormProps = {
   closeTime: string;
   maxPeople: number;
   advanceDays: number;
+  equipment: EquipmentOption[];
 };
 
 export default function ReservationForm({
@@ -19,6 +28,7 @@ export default function ReservationForm({
   closeTime,
   maxPeople,
   advanceDays,
+  equipment,
 }: ReservationFormProps) {
   const router = useRouter();
 
@@ -33,6 +43,17 @@ export default function ReservationForm({
 
   const [purpose, setPurpose] =
     useState("");
+    const [selectedEquipment, setSelectedEquipment] =
+      useState<number[]>([]);
+    function toggleEquipment(id: number) {
+      setSelectedEquipment((current) =>
+        current.includes(id)
+          ? current.filter(
+              (equipmentId) => equipmentId !== id
+            )
+          : [...current, id]
+      );
+    }
 
   const [loading, setLoading] =
     useState(false);
@@ -55,12 +76,13 @@ export default function ReservationForm({
         "Content-Type": "application/json",
         },
         body: JSON.stringify({
-        laboratoryId,
-        date,
-        startTime,
-        endTime,
-        peopleCount,
-        purpose,
+          laboratoryId,
+          date,
+          startTime,
+          endTime,
+          peopleCount,
+          purpose,
+          equipmentIds: selectedEquipment,
         }),
     });
 
@@ -203,6 +225,77 @@ export default function ReservationForm({
         />
       </div>
 
+      {/* Equipment */}
+      <div>
+        <label className="mb-2 block text-sm font-medium text-slate-700">
+          使用设备（可选）
+        </label>
+
+        {equipment.length === 0 ? (
+          <div className="rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-500">
+            当前实验室暂无可用设备
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {equipment.map((item) => {
+              const selected =
+                selectedEquipment.includes(item.id);
+
+              return (
+                <label
+                  key={item.id}
+                  className={`block cursor-pointer rounded-xl border p-4 transition ${
+                    selected
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() =>
+                        toggleEquipment(item.id)
+                      }
+                      className="mt-1 h-4 w-4"
+                    />
+
+                    <div className="flex-1">
+                      <p className="font-medium text-slate-900">
+                        {item.name}
+                      </p>
+
+                      {item.requirements && (
+                        <p className="mt-1 text-sm text-slate-500">
+                          使用要求：{item.requirements}
+                        </p>
+                      )}
+
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {item.requiresTeacherApproval && (
+                          <span className="rounded-full bg-orange-50 px-2 py-1 text-xs text-orange-700">
+                            需要教师审核
+                          </span>
+                        )}
+
+                        {item.minimumStudentLevel && (
+                          <span className="rounded-full bg-purple-50 px-2 py-1 text-xs text-purple-700">
+                            {getStudentLevelName(
+                              item.minimumStudentLevel
+                            )}
+                            及以上
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Purpose */}
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-700">
@@ -238,4 +331,22 @@ export default function ReservationForm({
       </button>
     </form>
   );
+}
+
+function getStudentLevelName(
+  level: string
+) {
+  if (level === "UNDERGRADUATE") {
+    return "本科生";
+  }
+
+  if (level === "MASTER") {
+    return "硕士研究生";
+  }
+
+  if (level === "DOCTORAL") {
+    return "博士研究生";
+  }
+
+  return level;
 }

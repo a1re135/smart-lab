@@ -28,6 +28,12 @@ export default async function ReservationsPage() {
       include: {
         laboratory: true,
         checkIn: true,
+
+        equipment: {
+          include: {
+            equipment: true,
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -111,6 +117,26 @@ export default async function ReservationsPage() {
                         用途：
                         {reservation.purpose}
                       </p>
+                      {reservation.equipment.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-sm text-slate-500">
+                            使用设备：
+                          </p>
+
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {reservation.equipment.map(
+                              (relation) => (
+                                <span
+                                  key={relation.equipmentId}
+                                  className="rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700"
+                                >
+                                  {relation.equipment.name}
+                                </span>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <StatusBadge
