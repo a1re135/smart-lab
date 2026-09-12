@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import { useRouter } from "next/navigation";
+import ActionPopup from "@/components/action-popup";
 
 type User = {
   id: number;
@@ -40,6 +41,13 @@ export default function UserManagement({
 
   const [search, setSearch] =
     useState("");
+
+  const [popup, setPopup] =
+    useState({
+        open: false,
+        title: "",
+        message: "",
+    });
 
   const [
     loadingId,
@@ -155,7 +163,29 @@ export default function UserManagement({
         return;
       }
 
-      router.refresh();
+      setPopup({
+        open: true,
+
+        title:
+            nextStatus === "DISABLED"
+            ? "账号已禁用"
+            : "账号已启用",
+
+        message:
+            nextStatus === "DISABLED"
+            ? "该用户现在无法登录系统。"
+            : "该用户现在可以重新登录系统。",
+        });
+
+        setTimeout(() => {
+        setPopup({
+            open: false,
+            title: "",
+            message: "",
+        });
+
+        router.refresh();
+        }, 1000);
     } catch (error) {
       console.error(
         "Update user request failed:",
@@ -169,6 +199,7 @@ export default function UserManagement({
   }
 
   return (
+    <>
     <div>
       {/* Controls */}
       <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -457,6 +488,12 @@ export default function UserManagement({
         )}
       </div>
     </div>
+  <ActionPopup
+    open={popup.open}
+    title={popup.title}
+    message={popup.message}
+    />
+    </>
   );
 }
 

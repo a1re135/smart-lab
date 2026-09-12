@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import ActionPopup from "@/components/action-popup";
 
 type Props = {
   reservationId: number;
@@ -19,6 +20,21 @@ export default function AdminApprovalButtons({
 
   const [error, setError] =
     useState("");
+  
+  const [popup, setPopup] =
+    useState<{
+      open: boolean;
+      title: string;
+      message: string;
+      variant:
+        | "success"
+        | "warning";
+    }>({
+      open: false,
+      title: "",
+      message: "",
+      variant: "success",
+    });
 
   async function handleDecision(
     decision:
@@ -82,7 +98,29 @@ export default function AdminApprovalButtons({
         return;
       }
 
-      router.refresh();
+      if (
+        decision === "APPROVED"
+      ) {
+        setPopup({
+          open: true,
+          title: "预约已批准",
+          message:
+            "管理员已完成该预约的最终审核。",
+          variant: "success",
+        });
+      } else {
+        setPopup({
+          open: true,
+          title: "预约已拒绝",
+          message:
+            "该预约申请已被管理员拒绝。",
+          variant: "warning",
+        });
+      }
+
+      setTimeout(() => {
+        router.refresh();
+      }, 1000);
     } catch (error) {
       console.error(
         "Admin approval request failed:",
@@ -96,6 +134,7 @@ export default function AdminApprovalButtons({
   }
 
   return (
+    <>
     <div>
       <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">
         管理员审核
@@ -145,5 +184,12 @@ export default function AdminApprovalButtons({
         </div>
       )}
     </div>
+    <ActionPopup
+      open={popup.open}
+      title={popup.title}
+      message={popup.message}
+      variant={popup.variant}
+    />
+  </>
   );
 }

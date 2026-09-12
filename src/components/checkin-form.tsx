@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import { useRouter } from "next/navigation";
+import ActionPopup from "@/components/action-popup";
 
 type Props = {
   reservationId: number;
@@ -24,6 +25,9 @@ export default function CheckInForm({
 
   const [error, setError] =
     useState("");
+
+const [showSuccess, setShowSuccess] =
+    useState(false);
 
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
@@ -80,7 +84,11 @@ export default function CheckInForm({
       }
 
       setCode("");
-      router.refresh();
+        setShowSuccess(true);
+
+        setTimeout(() => {
+        router.refresh();
+        }, 1000);
     } catch (error) {
       console.error(
         "Check-in request failed:",
@@ -94,6 +102,7 @@ export default function CheckInForm({
   }
 
   return (
+    <>
     <div className="overflow-hidden rounded-2xl border border-blue-200 bg-blue-50/60">
       <div className="border-b border-blue-100 px-4 py-3">
         <div className="flex items-center gap-3">
@@ -159,5 +168,11 @@ export default function CheckInForm({
         )}
       </form>
     </div>
+    <ActionPopup
+    open={showSuccess}
+    title="签到成功"
+    message="您的实验室签到已完成。"
+    />
+</>
   );
 }

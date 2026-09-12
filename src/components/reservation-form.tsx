@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import { useRouter } from "next/navigation";
+import ActionPopup from "@/components/action-popup";
 
 type EquipmentOption = {
   id: number;
@@ -63,6 +64,9 @@ export default function ReservationForm({
 
   const [error, setError] =
     useState("");
+
+  const [showSuccess, setShowSuccess] =
+    useState(false);
 
   function toggleEquipment(
     id: number
@@ -138,9 +142,15 @@ export default function ReservationForm({
         return;
       }
 
-      router.push(
-        "/student/reservations"
-      );
+      setShowSuccess(true);
+
+      setTimeout(() => {
+        router.push(
+          "/student/reservations"
+        );
+
+        router.refresh();
+      }, 1200);
 
       router.refresh();
     } catch (error) {
@@ -158,7 +168,8 @@ export default function ReservationForm({
   }
 
   return (
-    <form
+    <>
+      <form
       onSubmit={handleSubmit}
       className="space-y-8"
     >
@@ -454,7 +465,14 @@ export default function ReservationForm({
           )}
         </button>
       </div>
-    </form>
+      </form>
+
+      <ActionPopup
+        open={showSuccess}
+        title="预约成功"
+        message="您的预约申请已成功提交。"
+      />
+    </>
   );
 }
 

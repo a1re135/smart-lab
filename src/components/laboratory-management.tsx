@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import { useRouter } from "next/navigation";
+import ActionPopup from "@/components/action-popup";
 
 type Laboratory = {
   id: number;
@@ -69,6 +70,13 @@ export default function LaboratoryManagement({
 
   const [error, setError] =
     useState("");
+
+  const [popup, setPopup] =
+    useState({
+        open: false,
+        title: "",
+        message: "",
+    });
 
   async function createLaboratory(
     event: FormEvent<HTMLFormElement>
@@ -146,7 +154,22 @@ export default function LaboratoryManagement({
         false
       );
 
-      router.refresh();
+      setPopup({
+        open: true,
+        title: "实验室创建成功",
+        message:
+            "新的实验室已经添加到系统。",
+        });
+
+        setTimeout(() => {
+        setPopup({
+            open: false,
+            title: "",
+            message: "",
+        });
+
+        router.refresh();
+        }, 1000);
     } catch (error) {
       console.error(
         "Create laboratory request failed:",
@@ -220,6 +243,7 @@ export default function LaboratoryManagement({
   }
 
   return (
+    <>
     <div className="grid gap-8 xl:grid-cols-[380px_minmax(0,1fr)]">
       {/* ================================= */}
       {/* CREATE FORM */}
@@ -603,6 +627,12 @@ export default function LaboratoryManagement({
         )}
       </section>
     </div>
+    <ActionPopup
+        open={popup.open}
+        title={popup.title}
+        message={popup.message}
+    />
+    </>
   );
 }
 

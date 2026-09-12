@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import { useRouter } from "next/navigation";
+import ActionPopup from "@/components/action-popup";
 
 type Laboratory = {
   id: number;
@@ -81,6 +82,13 @@ export default function EquipmentManagement({
   const [error, setError] =
     useState("");
 
+  const [popup, setPopup] =
+    useState({
+        open: false,
+        title: "",
+        message: "",
+    });
+
   async function createEquipment(
     event: FormEvent<HTMLFormElement>
   ) {
@@ -152,7 +160,22 @@ export default function EquipmentManagement({
       );
       setMinimumStudentLevel("");
 
-      router.refresh();
+      setPopup({
+        open: true,
+        title: "设备添加成功",
+        message:
+            "新的实验设备已经添加到系统。",
+        });
+
+        setTimeout(() => {
+        setPopup({
+            open: false,
+            title: "",
+            message: "",
+        });
+
+        router.refresh();
+        }, 1000);
     } catch (error) {
       console.error(
         "Create equipment request failed:",
@@ -212,7 +235,22 @@ export default function EquipmentManagement({
         return;
       }
 
-      router.refresh();
+      setPopup({
+        open: true,
+        title: "设备状态已更新",
+        message:
+            "设备的当前状态已成功保存。",
+        });
+
+        setTimeout(() => {
+        setPopup({
+            open: false,
+            title: "",
+            message: "",
+        });
+
+        router.refresh();
+        }, 1000);
     } catch (error) {
       console.error(
         "Change equipment status failed:",
@@ -226,6 +264,7 @@ export default function EquipmentManagement({
   }
 
   return (
+    <>
     <div className="grid gap-8 xl:grid-cols-[380px_minmax(0,1fr)]">
       {/* =============================== */}
       {/* ADD EQUIPMENT */}
@@ -640,6 +679,13 @@ export default function EquipmentManagement({
         )}
       </section>
     </div>
+
+    <ActionPopup
+        open={popup.open}
+        title={popup.title}
+        message={popup.message}
+        />
+  </>
   );
 }
 

@@ -18,6 +18,9 @@ export default function CheckInCodeButton({
   const [error, setError] =
     useState("");
 
+  const [copied, setCopied] =
+    useState(false);
+
   async function generateCode() {
     setLoading(true);
     setError("");
@@ -74,20 +77,26 @@ export default function CheckInCodeButton({
 
   async function copyCode() {
     if (!code) {
-      return;
+        return;
     }
 
     try {
-      await navigator.clipboard.writeText(
+        await navigator.clipboard.writeText(
         code
-      );
+        );
+
+        setCopied(true);
+
+        setTimeout(() => {
+        setCopied(false);
+        }, 1500);
     } catch (error) {
-      console.error(
+        console.error(
         "Copy code failed:",
         error
-      );
+        );
     }
-  }
+    }
 
   return (
     <div className="mt-5">
@@ -126,7 +135,9 @@ export default function CheckInCodeButton({
               onClick={copyCode}
               className="mt-3 w-full rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-blue-700 ring-1 ring-blue-200 transition hover:bg-blue-100"
             >
-              复制验证码
+              {copied
+                ? "✓ 已复制"
+                : "复制验证码"}
             </button>
 
             <p className="mt-3 text-center text-xs leading-5 text-blue-700">
