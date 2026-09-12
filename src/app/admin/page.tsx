@@ -1,5 +1,5 @@
 import AdminApprovalButtons from "@/components/admin-approval-buttons";
-
+import LogoutButton from "@/components/logout-button";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 
@@ -36,6 +36,7 @@ export default async function AdminPage() {
             欢迎，{session.name}
           </h1>
         </div>
+        <LogoutButton />
       </header>
 
       {/* Content */}

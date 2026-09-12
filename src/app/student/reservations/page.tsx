@@ -1,5 +1,5 @@
 import Link from "next/link";
-
+import CancelReservationButton from "@/components/cancel-reservation-button";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 
@@ -91,6 +91,17 @@ export default async function ReservationsPage() {
                         reservation.status
                       }
                     />
+
+                    {[
+                    "PENDING_TEACHER",
+                    "PENDING_ADMIN",
+                    "APPROVED",
+                    ].includes(reservation.status) &&
+                    reservation.startAt > new Date() && (
+                        <CancelReservationButton
+                        reservationId={reservation.id}
+                        />
+                    )}
                   </div>
                 </div>
               )

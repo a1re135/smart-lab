@@ -1,7 +1,7 @@
 import TeacherApprovalButtons from "@/components/teacher-approval-buttons";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
-
+import LogoutButton from "@/components/logout-button";
 export default async function TeacherPage() {
   const session = await requireRole("TEACHER");
 
@@ -37,8 +37,9 @@ export default async function TeacherPage() {
             欢迎，{session.name}
           </h1>
         </div>
+        <LogoutButton />
       </header>
-
+      
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-slate-900">

@@ -1,5 +1,5 @@
 import Link from "next/link";
-
+import LogoutButton from "@/components/logout-button";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 
@@ -33,15 +33,19 @@ export default async function StudentPage() {
             </p>
           </div>
 
-          <div className="text-right">
-            <p className="font-medium text-slate-900">
-              {session.name}
-            </p>
+          <div className="flex items-center gap-4">
+            <div className="hidden text-right sm:block">
+                <p className="font-medium text-slate-900">
+                {session.name}
+                </p>
 
-            <p className="text-xs text-slate-500">
-              {session.username}
-            </p>
-          </div>
+                <p className="text-xs text-slate-500">
+                {session.username}
+                </p>
+            </div>
+
+            <LogoutButton />
+            </div>
         </div>
       </header>
 
