@@ -1,0 +1,325 @@
+// Smart Laboratory Reservation Management System
+
+enum UserRole {
+  @@type("pg/text@1")
+
+  Student = "student"
+  Teacher = "teacher"
+  Admin   = "admin"
+}
+
+enum UserStatus {
+  @@type("pg/text@1")
+
+  Active   = "active"
+  Disabled = "disabled"
+}
+
+enum LaboratoryType {
+  @@type("pg/text@1")
+
+  Normal    = "normal"
+  Advanced  = "advanced"
+  Equipment = "equipment"
+}
+
+enum EquipmentStatus {
+  @@type("pg/text@1")
+
+  Available   = "available"
+  InUse       = "in_use"
+  Maintenance = "maintenance"
+  Disabled    = "disabled"
+}
+
+enum ReservationStatus {
+  @@type("pg/text@1")
+
+  PendingTeacher = "pending_teacher"
+  PendingAdmin   = "pending_admin"
+  Approved       = "approved"
+  Rejected       = "rejected"
+  Cancelled      = "cancelled"
+  Completed      = "completed"
+  Missed         = "missed"
+}
+
+enum ApprovalType {
+  @@type("pg/text@1")
+
+  Teacher = "teacher"
+  Admin   = "admin"
+}
+
+enum ApprovalDecision {
+  @@type("pg/text@1")
+
+  Pending  = "pending"
+  Approved = "approved"
+  Rejected = "rejected"
+}
+
+enum CheckInMethod {
+  @@type("pg/text@1")
+
+  Code = "code"
+  QR   = "qr"
+}
+
+enum ViolationType {
+  @@type("pg/text@1")
+
+  NoShow             = "no_show"
+  FrequentCancel     = "frequent_cancel"
+  UnauthorizedAccess = "unauthorized_access"
+}
+
+
+// ======================================================
+// USER
+// ======================================================
+
+model User {
+  id           Int        @id @default(autoincrement())
+  username     String     @unique
+  passwordHash String
+  name         String
+  role         UserRole
+  status       UserStatus @default(Active)
+
+  studentNumber String? @unique
+  teacherNumber String? @unique
+
+  // A student may have one supervising teacher
+  teacherId Int?
+  teacher   User?  @relation("TeacherStudents", fields: [teacherId], references: [id])
+  students  User[] @relation("TeacherStudents")
+
+  reservations Reservation[] @relation("StudentReservations")
+  approvals    Approval[]    @relation("Approver")
+  violations   Violation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+
+// ======================================================
+// LABORATORY
+// ======================================================
+
+model Laboratory {
+  id          Int            @id @default(autoincrement())
+  name        String
+  type        LaboratoryType
+  description String?
+
+  // Stored as HH:mm, for example "08:00"
+  openTime  String
+  closeTime String
+
+  maxPeople Int
+
+  // How many days ahead a normal user can reserve
+  advanceDays Int @default(7)
+
+  requiresTeacherApproval Boolean @default(false)
+  requiresAdminApproval   Boolean @default(false)
+
+  isActive Boolean @default(true)
+
+  equipment    Equipment[]
+  reservations Reservation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("laboratories")
+}
+
+
+// ======================================================
+// EQUIPMENT
+// ======================================================
+
+model Equipment {
+  id           Int             @id @default(autoincrement())
+  laboratoryId Int
+  name         String
+  description  String?
+  status       EquipmentStatus @default(Available)
+
+  // Human-readable usage requirements
+  requirements String?
+
+  requiresTeacherApproval Boolean @default(false)
+
+  laboratory Laboratory @relation(
+    fields: [laboratoryId],
+    references: [id]
+  )
+
+  reservationEquipment ReservationEquipment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("equipment")
+}
+
+
+// ======================================================
+// RESERVATION
+// ======================================================
+
+model Reservation {
+  id           Int @id @default(autoincrement())
+  studentId    Int
+  laboratoryId Int
+
+  reservationDate DateTime
+  startTime       String
+  endTime         String
+
+  peopleCount Int
+  purpose     String
+
+  status ReservationStatus
+
+  student User @relation(
+    "StudentReservations",
+    fields: [studentId],
+    references: [id]
+  )
+
+  laboratory Laboratory @relation(
+    fields: [laboratoryId],
+    references: [id]
+  )
+
+  equipment ReservationEquipment[]
+  approvals Approval[]
+  checkIn   CheckIn?
+  violations Violation[]
+
+  cancelledAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([laboratoryId, reservationDate])
+  @@index([studentId])
+
+  @@map("reservations")
+}
+
+
+// ======================================================
+// RESERVATION <-> EQUIPMENT
+// ======================================================
+
+model ReservationEquipment {
+  reservationId Int
+  equipmentId   Int
+
+  reservation Reservation @relation(
+    fields: [reservationId],
+    references: [id]
+  )
+
+  equipment Equipment @relation(
+    fields: [equipmentId],
+    references: [id]
+  )
+
+  @@id([reservationId, equipmentId])
+
+  @@map("reservation_equipment")
+}
+
+
+// ======================================================
+// APPROVAL
+// ======================================================
+
+model Approval {
+  id            Int              @id @default(autoincrement())
+  reservationId Int
+  approverId    Int
+  type          ApprovalType
+  decision      ApprovalDecision @default(Pending)
+  comment       String?
+
+  reservation Reservation @relation(
+    fields: [reservationId],
+    references: [id]
+  )
+
+  approver User @relation(
+    "Approver",
+    fields: [approverId],
+    references: [id]
+  )
+
+  decidedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([reservationId])
+
+  @@map("approvals")
+}
+
+
+// ======================================================
+// CHECK IN
+// ======================================================
+
+model CheckIn {
+  id            Int           @id @default(autoincrement())
+  reservationId Int           @unique
+  method        CheckInMethod
+
+  verificationCode String?
+  qrToken          String? @unique
+
+  checkedInAt DateTime?
+
+  reservation Reservation @relation(
+    fields: [reservationId],
+    references: [id]
+  )
+
+  createdAt DateTime @default(now())
+
+  @@map("check_ins")
+}
+
+
+// ======================================================
+// VIOLATION
+// ======================================================
+
+model Violation {
+  id            Int           @id @default(autoincrement())
+  userId        Int
+  reservationId Int?
+  type          ViolationType
+  description   String?
+
+  user User @relation(
+    fields: [userId],
+    references: [id]
+  )
+
+  reservation Reservation? @relation(
+    fields: [reservationId],
+    references: [id]
+  )
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+
+  @@map("violations")
+}
