@@ -3,6 +3,7 @@ import LogoutButton from "@/components/logout-button";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import CheckInCodeButton from "@/components/checkin-code-button";
+import Link from "next/link";
 
 export default async function AdminPage() {
   const session = await requireRole("ADMIN");
@@ -57,6 +58,41 @@ export default async function AdminPage() {
         <LogoutButton />
       </header>
 
+      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+      <Link
+        href="/admin/laboratories"
+        className="rounded-xl bg-white p-5 shadow-sm transition hover:shadow-md"
+      >
+        <p className="text-sm text-slate-500">
+          管理
+        </p>
+
+        <h2 className="mt-1 text-lg font-bold text-slate-900">
+          实验室管理
+        </h2>
+      </Link>
+
+      <div className="rounded-xl bg-white p-5 shadow-sm">
+        <p className="text-sm text-slate-500">
+          即将添加
+        </p>
+
+        <h2 className="mt-1 text-lg font-bold text-slate-900">
+          设备管理
+        </h2>
+      </div>
+
+      <div className="rounded-xl bg-white p-5 shadow-sm">
+        <p className="text-sm text-slate-500">
+          即将添加
+        </p>
+
+        <h2 className="mt-1 text-lg font-bold text-slate-900">
+          用户管理
+        </h2>
+      </div>
+    </div>
+    
       {/* Content */}
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         <div className="mb-6">
