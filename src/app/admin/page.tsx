@@ -85,15 +85,18 @@ export default async function AdminPage() {
         </h2>
       </Link>
 
-      <div className="rounded-xl bg-white p-5 shadow-sm">
+      <Link
+        href="/admin/users"
+        className="rounded-xl bg-white p-5 shadow-sm transition hover:shadow-md"
+      >
         <p className="text-sm text-slate-500">
-          即将添加
+          管理
         </p>
 
         <h2 className="mt-1 text-lg font-bold text-slate-900">
           用户管理
         </h2>
-      </div>
+      </Link>
     </div>
 
       {/* Content */}
