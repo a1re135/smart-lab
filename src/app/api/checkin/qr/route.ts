@@ -16,7 +16,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "请使用学生账号登录",
+            "请先使用学生账号登录",
         },
         {
           status: 401,
@@ -27,37 +27,16 @@ export async function POST(
     const body =
       await request.json();
 
-    const reservationId =
-      Number(
-        body.reservationId
-      );
-
-    const code =
+    const token =
       String(
-        body.code ?? ""
+        body.token ?? ""
       ).trim();
 
-    if (
-      !Number.isInteger(
-        reservationId
-      ) ||
-      reservationId <= 0
-    ) {
-      return NextResponse.json(
-        {
-          error: "预约编号无效",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    if (!/^\d{6}$/.test(code)) {
+    if (!token) {
       return NextResponse.json(
         {
           error:
-            "请输入正确的6位验证码",
+            "二维码无效",
         },
         {
           status: 400,
@@ -65,27 +44,35 @@ export async function POST(
       );
     }
 
-    const reservation =
-      await prisma.reservation.findUnique({
+    const checkIn =
+      await prisma.checkIn.findUnique({
         where: {
-          id: reservationId,
+          qrToken: token,
         },
 
         include: {
-          checkIn: true,
+          reservation: {
+            include: {
+              laboratory: true,
+            },
+          },
         },
       });
 
-    if (!reservation) {
+    if (!checkIn) {
       return NextResponse.json(
         {
-          error: "预约不存在",
+          error:
+            "二维码不存在或已失效",
         },
         {
           status: 404,
         }
       );
     }
+
+    const reservation =
+      checkIn.reservation;
 
     if (
       reservation.studentId !==
@@ -94,7 +81,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "不能为其他学生签到",
+            "该二维码不属于您的预约",
         },
         {
           status: 403,
@@ -117,22 +104,7 @@ export async function POST(
       );
     }
 
-    if (!reservation.checkIn) {
-      return NextResponse.json(
-        {
-          error:
-            "管理员尚未生成签到验证码",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    if (
-      reservation.checkIn
-        .checkedInAt
-    ) {
+    if (checkIn.checkedInAt) {
       return NextResponse.json(
         {
           error:
@@ -144,29 +116,13 @@ export async function POST(
       );
     }
 
-    if (
-      reservation.checkIn
-        .verificationCode !==
-      code
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "签到验证码错误",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
     await prisma.checkIn.update({
       where: {
-        reservationId,
+        id: checkIn.id,
       },
 
       data: {
-        method: "CODE",
+        method: "QR",
         checkedInAt:
           new Date(),
       },
@@ -174,16 +130,21 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
+
+      laboratoryName:
+        reservation
+          .laboratory.name,
     });
   } catch (error) {
     console.error(
-      "Check-in error:",
+      "QR check-in error:",
       error
     );
 
     return NextResponse.json(
       {
-        error: "签到失败",
+        error:
+          "二维码签到失败",
       },
       {
         status: 500,
