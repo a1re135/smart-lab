@@ -118,9 +118,6 @@ export default function AdminApprovalButtons({
         });
       }
 
-      setTimeout(() => {
-        router.refresh();
-      }, 1000);
     } catch (error) {
       console.error(
         "Admin approval request failed:",
@@ -189,6 +186,16 @@ export default function AdminApprovalButtons({
       title={popup.title}
       message={popup.message}
       variant={popup.variant}
+      onClose={() => {
+        setPopup({
+          open: false,
+          title: "",
+          message: "",
+          variant: "success",
+        });
+
+        router.refresh();
+      }}
     />
   </>
   );

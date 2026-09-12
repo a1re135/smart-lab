@@ -143,15 +143,6 @@ export default function ReservationForm({
       }
 
       setShowSuccess(true);
-
-      setTimeout(() => {
-        router.push(
-          "/student/reservations"
-        );
-
-        router.refresh();
-      }, 1200);
-
       router.refresh();
     } catch (error) {
       console.error(
@@ -471,6 +462,15 @@ export default function ReservationForm({
         open={showSuccess}
         title="预约成功"
         message="您的预约申请已成功提交。"
+        onClose={() => {
+          setShowSuccess(false);
+
+          router.push(
+            "/student/reservations"
+          );
+
+          router.refresh();
+        }}
       />
     </>
   );

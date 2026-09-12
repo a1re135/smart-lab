@@ -101,10 +101,6 @@ export default function CancelReservationButton({
           variant: "success",
         });
       }
-
-      setTimeout(() => {
-        router.refresh();
-      }, 1400);
     } catch (error) {
       console.error(
         "Cancel reservation request failed:",
@@ -143,6 +139,16 @@ export default function CancelReservationButton({
         title={popup.title}
         message={popup.message}
         variant={popup.variant}
+        onClose={() => {
+          setPopup({
+            open: false,
+            title: "",
+            message: "",
+            variant: "success",
+          });
+
+          router.refresh();
+        }}
       />
     </>
   );

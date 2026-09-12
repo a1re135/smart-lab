@@ -160,16 +160,11 @@ export default function LaboratoryManagement({
         message:
             "新的实验室已经添加到系统。",
         });
-
-        setTimeout(() => {
         setPopup({
             open: false,
             title: "",
             message: "",
         });
-
-        router.refresh();
-        }, 1000);
     } catch (error) {
       console.error(
         "Create laboratory request failed:",
@@ -628,9 +623,18 @@ export default function LaboratoryManagement({
       </section>
     </div>
     <ActionPopup
-        open={popup.open}
-        title={popup.title}
-        message={popup.message}
+      open={popup.open}
+      title={popup.title}
+      message={popup.message}
+      onClose={() => {
+        setPopup({
+          open: false,
+          title: "",
+          message: "",
+        });
+
+        router.refresh();
+      }}
     />
     </>
   );

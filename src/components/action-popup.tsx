@@ -10,6 +10,7 @@ type Props = {
   title: string;
   message?: string;
   variant?: PopupVariant;
+  onClose: () => void;
 };
 
 export default function ActionPopup({
@@ -17,6 +18,7 @@ export default function ActionPopup({
   title,
   message,
   variant = "success",
+  onClose,
 }: Props) {
   if (!open) {
     return null;
@@ -38,7 +40,17 @@ export default function ActionPopup({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/30 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-sm animate-[popup_0.18s_ease-out] rounded-3xl border border-white/70 bg-white p-7 text-center shadow-2xl shadow-slate-950/20">
+      <div className="relative w-full max-w-sm rounded-3xl border border-white/70 bg-white p-7 text-center shadow-2xl shadow-slate-950/20">
+        {/* Close button */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="关闭"
+          className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full text-xl font-medium text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+        >
+          ×
+        </button>
+
         <div
           className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full text-3xl font-bold ${iconStyle}`}
         >
@@ -55,9 +67,9 @@ export default function ActionPopup({
           </p>
         )}
 
-        <div className="mx-auto mt-5 h-1 w-16 overflow-hidden rounded-full bg-slate-100">
-          <div className="h-full w-full animate-pulse rounded-full bg-blue-500" />
-        </div>
+        <p className="mt-5 text-xs text-slate-400">
+          点击右上角 × 关闭
+        </p>
       </div>
     </div>
   );

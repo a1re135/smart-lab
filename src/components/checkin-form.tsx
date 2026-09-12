@@ -85,10 +85,6 @@ const [showSuccess, setShowSuccess] =
 
       setCode("");
         setShowSuccess(true);
-
-        setTimeout(() => {
-        router.refresh();
-        }, 1000);
     } catch (error) {
       console.error(
         "Check-in request failed:",
@@ -169,9 +165,13 @@ const [showSuccess, setShowSuccess] =
       </form>
     </div>
     <ActionPopup
-    open={showSuccess}
-    title="签到成功"
-    message="您的实验室签到已完成。"
+      open={showSuccess}
+      title="签到成功"
+      message="您的实验室签到已完成。"
+      onClose={() => {
+        setShowSuccess(false);
+        router.refresh();
+      }}
     />
 </>
   );

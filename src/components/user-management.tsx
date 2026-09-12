@@ -176,16 +176,11 @@ export default function UserManagement({
             ? "该用户现在无法登录系统。"
             : "该用户现在可以重新登录系统。",
         });
-
-        setTimeout(() => {
         setPopup({
             open: false,
             title: "",
             message: "",
         });
-
-        router.refresh();
-        }, 1000);
     } catch (error) {
       console.error(
         "Update user request failed:",
@@ -492,6 +487,15 @@ export default function UserManagement({
     open={popup.open}
     title={popup.title}
     message={popup.message}
+    onClose={() => {
+      setPopup({
+        open: false,
+        title: "",
+        message: "",
+      });
+
+      router.refresh();
+    }}
     />
     </>
   );

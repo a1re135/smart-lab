@@ -166,16 +166,11 @@ export default function EquipmentManagement({
         message:
             "新的实验设备已经添加到系统。",
         });
-
-        setTimeout(() => {
         setPopup({
             open: false,
             title: "",
             message: "",
         });
-
-        router.refresh();
-        }, 1000);
     } catch (error) {
       console.error(
         "Create equipment request failed:",
@@ -241,16 +236,12 @@ export default function EquipmentManagement({
         message:
             "设备的当前状态已成功保存。",
         });
-
-        setTimeout(() => {
         setPopup({
             open: false,
             title: "",
             message: "",
         });
 
-        router.refresh();
-        }, 1000);
     } catch (error) {
       console.error(
         "Change equipment status failed:",
@@ -681,9 +672,18 @@ export default function EquipmentManagement({
     </div>
 
     <ActionPopup
-        open={popup.open}
-        title={popup.title}
-        message={popup.message}
+      open={popup.open}
+      title={popup.title}
+      message={popup.message}
+      onClose={() => {
+        setPopup({
+          open: false,
+          title: "",
+          message: "",
+        });
+
+        router.refresh();
+      }}
         />
   </>
   );

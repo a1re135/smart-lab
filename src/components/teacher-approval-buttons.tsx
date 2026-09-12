@@ -83,10 +83,6 @@ export default function TeacherApprovalButtons({
           variant: "warning",
         });
       }
-
-      setTimeout(() => {
-        router.refresh();
-      }, 1000);
     } catch {
       setError("无法连接服务器");
     } finally {
@@ -131,6 +127,16 @@ export default function TeacherApprovalButtons({
         title={popup.title}
         message={popup.message}
         variant={popup.variant}
+        onClose={() => {
+          setPopup({
+            open: false,
+            title: "",
+            message: "",
+            variant: "success",
+          });
+
+          router.refresh();
+        }}
       />
     </>
   );
