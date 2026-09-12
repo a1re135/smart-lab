@@ -46,6 +46,13 @@ export default async function StudentPage() {
       </header>
 
       {/* Content */}
+
+      <Link
+        href="/student/reservations"
+        className="inline-flex rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+        >
+        我的预约
+        </Link>
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-slate-900">
