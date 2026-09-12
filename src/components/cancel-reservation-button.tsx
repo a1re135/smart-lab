@@ -12,13 +12,17 @@ export default function CancelReservationButton({
 }: Props) {
   const router = useRouter();
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
 
   async function handleCancel() {
-    const confirmed = window.confirm(
-      "确定要取消这个预约吗？"
-    );
+    const confirmed =
+      window.confirm(
+        "确定要取消这个预约吗？取消后将无法恢复。"
+      );
 
     if (!confirmed) {
       return;
@@ -35,14 +39,18 @@ export default function CancelReservationButton({
         }
       );
 
-      const raw = await response.text();
+      const raw =
+        await response.text();
 
       let data;
 
       try {
         data = JSON.parse(raw);
       } catch {
-        console.error("Cancel API returned:", raw);
+        console.error(
+          "Cancel API returned:",
+          raw
+        );
 
         setError(
           `服务器错误 (${response.status})`
@@ -52,7 +60,10 @@ export default function CancelReservationButton({
       }
 
       if (!response.ok) {
-        setError(data.error ?? "取消失败");
+        setError(
+          data.error ?? "取消失败"
+        );
+
         return;
       }
 
@@ -70,20 +81,22 @@ export default function CancelReservationButton({
   }
 
   return (
-    <div className="mt-4">
+    <div>
       <button
         type="button"
         disabled={loading}
         onClick={handleCancel}
-        className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100 disabled:opacity-50"
+        className="flex w-full items-center justify-center rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 transition hover:border-red-300 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
       >
-        {loading ? "取消中..." : "取消预约"}
+        {loading
+          ? "正在取消..."
+          : "取消预约"}
       </button>
 
       {error && (
-        <p className="mt-2 text-sm text-red-600">
+        <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
           {error}
-        </p>
+        </div>
       )}
     </div>
   );

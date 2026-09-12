@@ -12,13 +12,29 @@ export default function AdminApprovalButtons({
 }: Props) {
   const router = useRouter();
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [loading, setLoading] =
+    useState<
+      "APPROVED" | "REJECTED" | null
+    >(null);
+
+  const [error, setError] =
+    useState("");
 
   async function handleDecision(
-    decision: "APPROVED" | "REJECTED"
+    decision:
+      | "APPROVED"
+      | "REJECTED"
   ) {
-    setLoading(true);
+    if (
+      decision === "REJECTED" &&
+      !window.confirm(
+        "确定要拒绝这个预约吗？"
+      )
+    ) {
+      return;
+    }
+
+    setLoading(decision);
     setError("");
 
     try {
@@ -28,7 +44,8 @@ export default function AdminApprovalButtons({
           method: "POST",
 
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type":
+              "application/json",
           },
 
           body: JSON.stringify({
@@ -37,7 +54,8 @@ export default function AdminApprovalButtons({
         }
       );
 
-      const raw = await response.text();
+      const raw =
+        await response.text();
 
       let data;
 
@@ -50,14 +68,17 @@ export default function AdminApprovalButtons({
         );
 
         setError(
-          `服务器错误 (${response.status})，请查看 VS Code 终端`
+          `服务器错误 (${response.status})`
         );
 
         return;
       }
 
       if (!response.ok) {
-        setError(data.error ?? "审核失败");
+        setError(
+          data.error ?? "审核失败"
+        );
+
         return;
       }
 
@@ -68,40 +89,58 @@ export default function AdminApprovalButtons({
         error
       );
 
-      setError("请求失败，请查看 VS Code 终端");
+      setError("无法连接服务器");
     } finally {
-      setLoading(false);
+      setLoading(null);
     }
   }
 
   return (
-    <div className="mt-4">
-      <div className="flex gap-3">
+    <div>
+      <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">
+        管理员审核
+      </p>
+
+      <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
-          disabled={loading}
-          onClick={() =>
-            handleDecision("APPROVED")
+          disabled={
+            loading !== null
           }
-          className="flex-1 rounded-lg bg-green-600 px-4 py-3 font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={() =>
+            handleDecision(
+              "APPROVED"
+            )
+          }
+          className="flex items-center justify-center rounded-xl bg-green-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading ? "处理中..." : "通过"}
+          {loading ===
+          "APPROVED"
+            ? "处理中..."
+            : "✓ 通过"}
         </button>
 
         <button
           type="button"
-          disabled={loading}
-          onClick={() =>
-            handleDecision("REJECTED")
+          disabled={
+            loading !== null
           }
-          className="flex-1 rounded-lg bg-red-600 px-4 py-3 font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={() =>
+            handleDecision(
+              "REJECTED"
+            )
+          }
+          className="flex items-center justify-center rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading ? "处理中..." : "拒绝"}
+          {loading ===
+          "REJECTED"
+            ? "处理中..."
+            : "拒绝"}
         </button>
       </div>
 
       {error && (
-        <div className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+        <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs font-medium text-red-700">
           {error}
         </div>
       )}

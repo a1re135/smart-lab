@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 export default function LogoutButton() {
   const router = useRouter();
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
   async function handleLogout() {
     setLoading(true);
@@ -20,13 +21,18 @@ export default function LogoutButton() {
       );
 
       if (!response.ok) {
-        throw new Error("Logout failed");
+        throw new Error(
+          "Logout failed"
+        );
       }
 
       router.push("/login");
       router.refresh();
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error(
+        "Logout error:",
+        error
+      );
 
       alert("退出登录失败");
     } finally {
@@ -37,11 +43,25 @@ export default function LogoutButton() {
   return (
     <button
       type="button"
-      onClick={handleLogout}
       disabled={loading}
-      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+      onClick={handleLogout}
+      className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3.5 py-2 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
     >
-      {loading ? "退出中..." : "退出登录"}
+      <span className="hidden sm:inline">
+        {loading
+          ? "退出中..."
+          : "退出登录"}
+      </span>
+
+      <span className="sm:hidden">
+        {loading ? "..." : "退出"}
+      </span>
+
+      {!loading && (
+        <span className="ml-2">
+          →
+        </span>
+      )}
     </button>
   );
 }
