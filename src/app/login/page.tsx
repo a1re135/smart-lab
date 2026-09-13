@@ -305,6 +305,25 @@ export default function LoginPage() {
                 </button>
               </form>
 
+              <div className="mt-5 text-center">
+                <p className="text-sm text-slate-500">
+                  还没有账号？
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    router.push("/register")
+                  }
+                  className="mt-2 inline-flex items-center justify-center rounded-xl border border-blue-200 bg-blue-50 px-5 py-2.5 text-sm font-bold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+                >
+                  注册学生 / 教师账号
+                  <span className="ml-2">
+                    →
+                  </span>
+                </button>
+              </div>
+
               {/* Demo accounts */}
               <div className="mt-8 border-t border-slate-100 pt-6">
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
